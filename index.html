@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แสดงข้อมูลจาก Google Sheets</title>
+    <style>
+        body { 
+            font-family: 'Sarabun', Tahoma, sans-serif; 
+            padding: 20px; 
+            background-color: #f9f9f9;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 20px;
+        }
+        th, td { 
+            border: 1px solid #ddd; 
+            padding: 10px; 
+            text-align: left; 
+        }
+        th { 
+            background-color: #4CAF50; 
+            color: white;
+        }
+        .status { 
+            color: #666; 
+            font-style: italic; 
+        }
+        .error { 
+            color: red; 
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>ข้อมูลจากระบบ</h2>
+        <div id="data-container">
+            <p class="status">กำลังโหลดข้อมูล กรุณารอสักครู่...</p>
+        </div>
+    </div>
+
+    <script>
+        // ใส่ URL Web App ของคุณ (ตรวจสอบให้แน่ใจว่าลงท้ายด้วย /exec)
+        const scriptUrl = 'https://script.google.com/a/macros/gs.nts.ac.th/s/AKfycbyxUphiL18VI0AA2TgVugM5QsJPId7TOBcpPrrpsllwTA_xTZ-lobvMg7/exec';
+
+        // ฟังก์ชันดึงข้อมูล
+        fetch(scriptUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('เกิดปัญหาในการเชื่อมต่อข้อมูล');
+                }
+                return response.json(); // แปลงผลลัพธ์เป็น JSON
+            })
+            .then(data => {
+                displayData(data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('data-container').innerHTML = 
+                    `<p class="error">เกิดข้อผิดพลาด: ${error.message} <br>(โปรดตรวจสอบว่า Web App ตั้งค่าสิทธิ์เป็น 'Anyone' หรือไม่)</p>`;
+            });
+
+        // ฟังก์ชันสร้างตารางแสดงผล
+        function displayData(data) {
+            const container = document.getElementById('data-container');
+            
+            // ตรวจสอบว่ามีข้อมูลหรือไม่
+            if (!data || data.length === 0) {
+                container.innerHTML = '<p>ไม่พบข้อมูล</p>';
+                return;
+            }
+
+            // สร้างโครงสร้างตาราง
+            let html = '<table><thead><tr>';
+            
+            // ดึงชื่อคอลัมน์จาก Object ตัวแรก
+            const headers = Object.keys(data[0]);
+            headers.forEach(header => {
+                html += `<th>${header}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+
+            // นำข้อมูลแต่ละแถวมาใส่ตาราง
+            data.forEach(row => {
+                html += '<tr>';
+                headers.forEach(header => {
+                    html += `<td>${row[header] || ''}</td>`;
+                });
+                html += '</tr>';
+            });
+
+            html += '</tbody></table>';
+            
+            // นำตารางไปแสดงในหน้าเว็บ
+            container.innerHTML = html;
+        }
+    </script>
+
+</body>
+</html>
